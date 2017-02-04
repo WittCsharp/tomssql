@@ -1,0 +1,104 @@
+#! /usr/bin/env node
+const manager = require('../src');
+
+/**
+ * 连接数据库
+ * @return {}
+ */
+var connectionStart = function(){
+	const repl = require('repl');
+	const msg = 'message';
+
+	function myEval(cmd, context, filename, callback){
+		manager.rawSql(cmd)
+		.then(function(data){
+			if (data) callback(null,data);
+		})
+		.catch(function(err){
+			callback(null,err);
+		});
+	}
+
+	const replServer = repl.start({prompt: 'mssql >',eval: myEval});
+	replServer.defineCommand('use',{
+		help: 'check out database',
+		action(dataname){
+			var _that = this;
+			manager.checkoutDatabase(dataname)
+			.then(function(){
+				console.log('The database is ',dataname);
+				_that.displayPrompt();
+			})
+			.catch((err)=> {
+				console.log(err);
+				process.exit(0);
+			});
+		}
+	})
+}
+
+// 初始化commond
+var cli = require('yargs')
+.usage('Usage: $0 -p [port] -h [host] -u [username] -w [password] -d [database]')
+.option('p',{
+	alias: 'p',
+	desc: 'The connection port.',
+	default: '1433'
+})
+.options('h',{
+	demand: false,
+	alias: 'h',
+	desc: 'The conection host'
+})
+.options('u',{
+	demand: false,
+	alias: 'u',
+	desc: 'user name'
+})
+.options('w',{
+	demand: false,
+	alias: 'w',
+	desc: 'password'
+})
+.options('d',{
+	demand: false,
+	alias: 'd',
+	desc: 'The database name',
+	default: 'master'
+})
+.options('v',{
+	alias: 'version',
+	description: 'Display version number'
+})
+.options('H',{
+	alias: 'H',
+	description: 'help'
+});
+
+var argv = cli.argv;
+// 先连接knex
+
+var knex = null;
+if(argv.v || argv.version){
+	var pkginfo = require('../package.json');
+	process.exit();
+}else if(argv.H){
+	cli.showHelp();
+	process.exit();
+}else if (argv.h){
+	var options = {
+		host:argv.h,
+		password:argv.w,
+		port:argv.p,
+		user:argv.u,
+		database:argv.d
+	};
+	manager.connectionMssql(options)
+	.then(function(){
+		connectionStart();
+	})
+	.catch((err)=> {
+		console.log(err);
+		process.exit(0);
+	});
+}
