@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "connection to mssql",
   "main": "index.js",
-  "bin":{
-    "tomssql":"bin/tomssql"
+  "bin": {
+    "tomssql": "bin/tomssql"
   },
   "keywords": [
     "mssql"
@@ -16,6 +16,7 @@
     "knex": "^0.12.6",
     "mssql": "^3.3.0",
     "repl": "^0.1.3",
+    "util": "^0.10.3",
     "yargs": "^6.6.0"
   }
 }

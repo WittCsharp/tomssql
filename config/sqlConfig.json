@@ -1,0 +1,13 @@
+{
+  "mssql":{
+    "databases":"select * from sysdatabases;",
+    "tables": "select * from sysobjects where xtype='U';",
+    "desc": "select sc.name,st.name from syscolumns sc,systypes st where sc.xtype=st.xtype and sc.id in(select id from sysobjects where xtype='U' and name='%s');"
+  },
+  "mysql":{
+
+  },
+  "oracle":{
+
+  }
+}

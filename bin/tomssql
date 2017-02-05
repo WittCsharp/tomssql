@@ -1,5 +1,7 @@
 #! /usr/bin/env node
 const manager = require('../src');
+var replManager = require('../src/replinit');
+const utilManager = require('../utilManager');
 
 /**
  * 连接数据库
@@ -11,31 +13,17 @@ var connectionStart = function(){
 
 	function myEval(cmd, context, filename, callback){
 		manager.rawSql(cmd)
-		.then(function(data){
-			if (data) callback(null,data);
-			else callback(null);
+		.then(function(){
+			callback(null);
 		})
 		.catch(function(err){
-			callback(null,err);
+			utilManager.error(err);
+			callback(null);
 		});
 	}
 
 	const replServer = repl.start({prompt: 'mssql >',eval: myEval});
-	replServer.defineCommand('use',{
-		help: 'check out database',
-		action(dataname){
-			var _that = this;
-			manager.checkoutDatabase(dataname)
-			.then(function(){
-				console.log('The database is ',dataname);
-				_that.displayPrompt();
-			})
-			.catch((err)=> {
-				console.log(err);
-				process.exit(0);
-			});
-		}
-	})
+	replManager(replServer, manager);
 }
 
 // 初始化commond

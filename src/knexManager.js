@@ -1,5 +1,11 @@
 'use strict';
 
+// 引用模块
+var sqlConvert = require('./sqlConvert');
+var utilManager = require('../utilManager');
+var util = require('util');
+
+var client = "mssql";
 var defaultOptions = {
 	host:'127.0.0.1',
 	user: 'sa',
@@ -18,6 +24,11 @@ var checkoutDatabase = function(database){
 	return connectionMssql(defaultOptions);
 }
 
+/**
+ * 测试连接是否可用
+ * @param  {object} k knex实体对象
+ * @return {[type]}   [description]
+ */
 var testConnection = function(k){
 	return new Promise(function(resolve,reject){
 		k.raw('select 1;')
@@ -26,7 +37,7 @@ var testConnection = function(k){
 			console.log('Welcome to sql server');
 			console.log('The host is ',defaultOptions.host);
 			console.log('The Database is ',defaultOptions.database);
-			console.log('You can checkout database use command \'.use [databasename]\' ');
+			utilManager.error('You can checkout database use command \'.use [databasename]\' ');
 			return resolve(true);
 		}).catch((err) => {
 			return reject(err);
@@ -34,15 +45,54 @@ var testConnection = function(k){
 	})
 }
 
+/**
+ * 获取所有表
+ * @return {string} sql
+ */
+var getAllTables = function(){
+	var sql = sqlConvert.getSql(client,'tables');
+	return rawSql(sql);
+}
+
+/**
+ * 获取所有库
+ * @return {string} [sql]
+ */
+var getAllDatabase = function(){
+	var sql = sqlConvert.getSql(client,'databases');
+	return rawSql(sql);
+}
+
+/**
+ * 获取表列名的描述
+ * @param  {[type]} tableName [description]
+ * @return {[type]}           [description]
+ */
+var getDesc = function(tableName){
+	var sql = sqlConvert.getSql(client,'desc');
+	sql = util.format(sql,tableName);
+	return rawSql(sql);
+}
+
+/**
+ * 连接sqlserver终端
+ * @param  {object} options 相关配置
+ * @return {promise}         promise
+ */
 var connectionMssql = function(options){
 	defaultOptions = Object.assign(defaultOptions,options);
 	var knex = require('knex')({
-		client: 'mssql',
+		client: client,
 		connection:defaultOptions
 	});
 	return testConnection(knex);
 }
 
+/**
+ * 执行sql
+ * @param  {[type]} cmd [description]
+ * @return {[type]}     [description]
+ */
 var rawSql = function(cmd){
 	if (cmd.indexOf(';')>=0){
 		sqlArray.push(cmd);
@@ -89,5 +139,8 @@ var rawSql = function(cmd){
 module.exports = {
 	connectionMssql:connectionMssql,
 	rawSql:rawSql,
-	checkoutDatabase: checkoutDatabase
+	checkoutDatabase: checkoutDatabase,
+	getAllTables: getAllTables,
+	getDesc: getDesc,
+	getAllDatabase: getAllDatabase
 }
